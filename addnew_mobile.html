@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Dodavanje</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css" />
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+	<script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="http://maps.googleapis.com/maps/api/js"></script>
+	<style>
+		.containing-element .ui-slider-switch { width: 15em; zoom:-5 }
+	</style>	
+</head>
+<body>
+	<div data-role="page" id="pageone" data-theme="b">
+		<div data-role="header">
+			<!--<a href="#" class="ui-btn ui-corner-all ui-shadow ui-icon-back ui-btn-icon-left">Odjava</a>-->
+			<h1>Dodavanje novog mesta</h1>
+			<!--<a href="#" class="ui-btn ui-corner-all ui-shadow ui-icon-plus ui-btn-icon-left">Dodaj novi</a>-->
+		</div>
+        <div class="back-batton">
+            <button><a href="main_mobile.html">Vrati se na glavnu stranicu</a></button>
+        </div>
+
+		<div data-role="main" class="ui-content">
+			<ul data-role="listview" data-autodividers="false" data-inset="true">
+				<li data-icon="false">Vaša pozicija</li>
+				<li data-icon="false">
+					<div id="googleMap" style="width:100%; height:30%"></div>
+				</li>
+			</ul>	
+            	<div class="ui-field-contain">
+						<label for="item_type">Tip:</label>
+						<select id="item_type" data-mini="true" data-native-menu="false">
+							<option value="zastoj">Ribolov</option>
+							<option value="nezgoda">Lov</option>
+						</select>
+					</div>
+			<ul data-role="listview" data-autodividers="false" data-inset="true">
+				<li data-icon="false">Detalji novog ribolovnog mesta</li>
+				<li data-icon="false">
+					<div class="ui-field-contain">
+						<label>Geo. širina:</label>
+						<input type="text" id="item_latitude" readonly/>
+					</div>
+					<div class="ui-field-contain">
+						<label>Geo. dužina:</label>
+						<input type="text" id="item_longitude" readonly/>
+					</div>
+<!--
+                    <div class="ui-field-contain">
+						<label>Napomena:</label>
+                        <input type="text" placeholder="Napomena" />
+					</div>
+-->
+<!--
+					<div class="ui-field-contain">
+						<label for="item_type">Tip:</label>
+						<select id="item_type" data-mini="true" data-native-menu="false">
+							<option value="zastoj">Zastoj</option>
+							<option value="nezgoda">Nezgoda</option>
+							<option value="udes">Udes</option>
+							<option value="pomoc">Pomoć na putu</option>
+						</select>
+					</div>
+-->
+					<div data-role="fieldcontain">
+						<label for="item_desc">Opis:</label><br>
+						<textarea id="item_desc"></textarea>
+					</div>
+					<button onclick="addNew()">Unesi</button>
+				</li>
+			</ul>
+		</div>
+
+		<div data-role="footer" style="text-align:center;">
+			<div data-role="controlgroup" data-type="horizontal">				
+				<a href="#myDialog" data-rel="popup" data-position-to="window" data-transition="fade"
+					class="ui-btn ui-corner-all ui-shadow ui-icon-info ui-btn-icon-left">Pomoć oko dodavanja</a>
+			</div>
+			<div data-role="popup" id="myDialog" data-overlay-theme="a">
+				<div data-role="header">
+					<h1>Pomoć</h1>
+				</div>
+				<div data-role="main" class="ui-content">
+					<div class="containing-element">
+						<h4>Napisati nesto oko dodavanja na kraju!</h4>					
+					</div>
+				</div><br>
+				<a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b ui-icon-back ui-btn-icon-left" data-rel="back">Nazad</a>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+
+<script>
+	$('button').css('background-color', 'gray');
+	$(document).ready(function () {
+		var wHeight = $(document).height();
+		var mapHeight = wHeight / 3.0;
+		$("#googleMap").css('height', mapHeight);
+		navigator.geolocation.getCurrentPosition(onSuccess, onError);		
+	});
+
+	function addNew() {
+	    $('button').css('background-color', 'orange');
+	    $('button').text('Trenutak...');
+		$.ajax({
+			type: "POST",
+			url: "http://damjan.voidsoft.in.rs/php/insertObject.php",
+			xhrFields: { withCredentials: false },
+			crossDomain: true,
+			beforeSend: function () { $.mobile.loading('show') },
+			complete: function () { $.mobile.loading('hide') },
+			data: { lat: $('#item_latitude').val(), lon: $('#item_longitude').val(), type: $('#item_type').val(), description: $('#item_desc').val(), user: localStorage.getItem('user_permanent') },
+			dataType: 'text',
+			success: function (response) {
+				if (response.indexOf('true') != -1) {        
+				    $('button').css('background-color', 'green');
+				    $('button').text('Objekat je snimljen');
+				    setTimeout(function () {
+				        $('button').css('background-color', 'gray');
+				        $('button').text('Unesi');	        
+				    }, 1000);
+				}
+				else
+				{
+				    $('button').css('background-color', 'gray');
+				    $('button').text('Unesi');
+				    alert(response);
+				}
+					
+			},
+			error: function () {
+			    $('button').css('background-color', 'gray');
+			    $('button').text('Unesi');
+				alert("Greška na serverskoj strani. Probajte kasnije.");
+			}
+		});
+	};
+
+	
+	var _myCenter = new google.maps.LatLng(43.331251, 21.892552);
+	var _map;
+	var _marker;
+
+	function initialize() {
+		var mapProp = {
+			center: _myCenter,
+			zoom: 17,
+			mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+
+		_map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+
+		_marker = new google.maps.Marker({
+		    position: _myCenter,
+		    draggable: true,
+		});
+		_marker.setMap(_map);
+		google.maps.event.addListener(_marker, 'dragend', function () {		    
+		    var position = _marker.getPosition();
+		    $('#item_latitude').val(position.A);
+		    $('#item_longitude').val(position.F);
+		});
+	}
+	google.maps.event.addDomListener(window, 'load', initialize);
+	
+
+	function onSuccess(position) {
+	    $('#item_latitude').val(position.coords.latitude);
+	    $('#item_longitude').val(position.coords.longitude);
+		_map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+		_marker.setPosition(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+	}
+
+	function onError(error) {
+		alert('code: ' + error.code + '\n' +
+			  'message: ' + error.message + '\n');
+	}
+
+</script>

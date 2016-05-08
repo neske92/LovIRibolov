@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Registracija</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css" />
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+	<script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="http://maps.googleapis.com/maps/api/js"></script>
+	<style>
+		.containing-element .ui-slider-switch {
+			width: 15em;
+			zoom: -5;
+		}
+
+		.ui-btn {
+			background-color: gray;
+		}
+
+		.center {
+			margin-left: auto;
+			margin-right: auto;
+			width: 40%;
+		}
+	</style>
+</head>
+<body>
+	<div data-role="page" id="pageone" data-theme="b">
+		<div data-role="main" class="ui-content" style="height:100%">
+			<ul data-role="listview" data-autodividers="false" data-inset="true">
+				<li data-icon="false">Vaši podaci</li>
+				<li data-icon="false">
+					<div class="ui-field-contain">
+						<input type="text" id="name" placeholder="Ime">
+					</div>
+					<div class="ui-field-contain">
+						<input type="text" id="surname" placeholder="Prezime">
+					</div>
+					<div class="ui-field-contain">
+						<input type="date" id="birth" placeholder="Datum rodjenja">
+					</div>
+					<div class="ui-field-contain">
+						<input type="email" id="email" placeholder="e-mail adresa">
+					</div><br>
+					<div class="ui-field-contain">
+						<input type="text" id="username" placeholder="Korisničko ime">
+					</div>
+					<div class="ui-field-contain">
+						<input type="password" id="password" placeholder="Lozinka">
+					</div>
+					<div class="ui-field-contain">
+						<input type="password" id="passAgain" onkeypress="handle(event)" placeholder="Ponovite lozinku...">
+					</div>
+					<div data-role="controlgroup" data-type="horizontal">
+						<a href="#" onclick="registrationClick()" class="ui-btn ui-corner-all ui-shadow">Registruj me</a>
+					</div>	
+				</li>
+			</ul>
+		</div>
+		<div data-role="popup" id="myDialog" data-overlay-theme="a">
+			<div data-role="header">
+				<h4 id="dialogHeaderText"></h4>
+			</div>
+			<div data-role="main" class="ui-content">
+				<div class="containing-element">
+					<h5 id="dialogMainText"></h5>
+				</div>
+			</div><br>
+			<a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b ui-icon-back ui-btn-icon-left" data-rel="back">Nazad</a>
+		</div>
+	</div>
+	<a href="#myDialog" id="dialogButton" data-rel="popup" data-position-to="window" data-transition="fade"
+	   class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left" style="display:none"></a>
+</body>
+</html>
+<script>
+	$('.ui-btn').css('background-color', 'gray');
+	function openDialog(headerText, mainText) {
+		$('#dialogHeaderText').text(headerText);
+		$('#dialogMainText').text(mainText)
+		$('#dialogButton').click()
+	}
+
+	function handle(e) {
+		if (e.keyCode === 13) {
+			registrationClick();
+		}
+		return false;
+	}
+
+	function registrationClick() {
+		if ($('#password').val() != $('#passAgain').val()) {
+			openDialog('Info','Lozinke se ne poklapaju!');
+			return;
+		}
+		$.ajax({
+			type: "POST",
+			url: "http://damjan.voidsoft.in.rs/php/insertUser.php",
+			xhrFields: { withCredentials: false },
+			crossDomain: true,
+			//beforeSend: function () { $.mobile.loading('show') },
+			//complete: function () { $.mobile.loading('hide') },
+			data: {
+				name: $('#name').val(), surname: $('#surname').val(),
+				birth: $('#birth').val(), email: $('#email').val(),
+				user: $('#username').val(), password: $('#password').val()
+			},
+			dataType: 'text',
+			success: function (response) {
+				if (response.indexOf('true') != -1) {
+					localStorage.setItem('user_permanent', $('#username').val());
+					localStorage.setItem('user_firsttime', 'true');
+					window.location = "main_mobile.html";
+				}
+				else
+					openDialog('', response);
+			},
+			error: function () {
+				openDialog('Error', 'Interna greška na serveru!\n\rProbajte kasnije.');
+			}
+		});
+	};	
+
+</script>

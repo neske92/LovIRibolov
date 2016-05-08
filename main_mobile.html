@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Lov&amp;Ribolov</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css" />
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+	<script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="http://maps.googleapis.com/maps/api/js"></script>
+	<style>
+		.containing-element .ui-slider-switch { width: 15em; zoom:-5 }
+	</style>	
+</head>
+<body>
+	<div data-role="page" id="pageone" data-theme="b">
+		<div data-role="header">
+			<a href="#" onclick="logout()" class="ui-btn ui-corner-all ui-shadow ui-icon-back ui-btn-icon-left">Odjava</a>
+			<h1>Lov&amp;Ribolov</h1>
+			<a href="#" onclick="addNewClick()" class="ui-btn ui-corner-all ui-shadow ui-icon-plus ui-btn-icon-left">Dodaj novi</a>
+		</div>
+
+		<div data-role="main" class="ui-content">
+			<ul data-role="listview" data-autodividers="false" data-inset="true">
+				<li data-icon="false">Vaše okruženje</li>
+				<li data-icon="false">
+					<div id="googleMap" style="width:100%;height:30%"></div>
+				</li>
+			</ul>			
+			<ul data-role="listview" data-autodividers="false" data-inset="true">
+				<li data-icon="false">Detalji selektovanog objekta</li>
+				<li data-icon="false">
+					<div class="ui-field-contain">
+						<label>ID:</label>
+						<input type="text" id="item_id" readonly placeholder="Na mapi izaberite objekat..."/>
+					</div>
+					<div class="ui-field-contain">
+						<label>Tip:</label>
+						<input type="text" id="item_type" readonly/>
+					</div>
+					<div data-role="fieldcontain">
+						<label for="item_desc">Opis:</label><br>
+						<textarea id="item_desc" readonly></textarea>
+					</div>
+					<a href="#" onclick="deleteObject()" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b ui-icon-delete ui-btn-icon-left">Trajno ukloni</a>
+				</li>				
+			</ul>
+		</div>
+
+		<div data-role="footer" style="text-align:center;">
+			<div data-role="controlgroup" data-type="horizontal">
+				<a href="#myDialogInfo" data-rel="popup" data-position-to="window" data-transition="fade"
+				   class="ui-btn ui-corner-all ui-shadow ui-icon-info ui-btn-icon-left">Pomoć</a>
+				<a href="#myDialogSettings" data-rel="popup" data-position-to="window" data-transition="fade"
+					class="ui-btn ui-corner-all ui-shadow ui-icon-gear ui-btn-icon-left">Postavke</a>
+			</div>
+			<div data-role="popup" id="myDialogSettings" data-overlay-theme="a">
+				<div data-role="header">
+					<h1>Postavke</h1>
+				</div>
+				<div data-role="main" class="ui-content">
+					<div class="containing-element">
+						<div class="row">
+							<div class="col-xs-1"></div>
+							<div class="col-xs-10">
+								<select onchange="changeType('switch_zastoj',0)" id="switch_zastoj" data-role="slider">
+									<option value="0">prikazi zastoje</option>
+									<option value="1" selected>sakrij zastoje</option>
+								</select>
+							</div>
+							<div class="col-xs-1"></div>
+						</div>
+						<div class="row">
+							<div class="col-xs-1"></div>
+							<div class="col-xs-10">
+								<select onchange="changeType('switch_nezgode',1)" id="switch_nezgode" data-role="slider">
+									<option value="0">prikazi nezgode</option>
+									<option value="1" selected>sakrij nezgode</option>
+								</select>
+							</div>
+							<div class="col-xs-1"></div>
+						</div>
+						<div class="row">
+							<div class="col-xs-1"></div>
+							<div class="col-xs-10">
+								<select onchange="changeType('switch_udes',2)" id="switch_udes" data-role="slider">
+									<option value="0">prikazi udese</option>
+									<option value="1" selected>sakrij udese</option>
+								</select>
+							</div>
+							<div class="col-xs-1"></div>
+						</div>
+						<div class="row">
+							<div class="col-xs-1"></div>
+							<div class="col-xs-10">
+								<select onchange="changeType('switch_pomoc',3)" id="switch_pomoc" data-role="slider">
+									<option value="0">prikazi pomoć na putu</option>
+									<option value="1" selected>sakrij pomoć na putu</option>
+								</select>
+							</div>
+							<div class="col-xs-1"></div>
+						</div>
+					</div>
+				</div><br>
+				<a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b ui-icon-back ui-btn-icon-left" data-rel="back">Nazad</a>
+			</div>
+			<div data-role="popup" id="myDialogInfo" data-overlay-theme="a">
+				<div data-role="header">
+					<h1>Postavke</h1>
+				</div>
+				<div data-role="main" class="ui-content">
+					<div class="containing-element">
+						<h4>Napisati nesto oko dodavanja na kraju!</h4>
+					</div>
+				</div><br>
+				<a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b ui-icon-back ui-btn-icon-left" data-rel="back">Nazad</a>
+			</div>
+		</div>
+		<div data-role="popup" id="myDialogTemplate" data-overlay-theme="a">
+			<div data-role="header">
+				<h4 id="dialogHeaderText"></h4>
+			</div>
+			<div data-role="main" class="ui-content">
+				<div class="containing-element">
+					<h5 id="dialogMainText"></h5>
+				</div>
+			</div><br>
+			<a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b ui-icon-back ui-btn-icon-left" data-rel="back">Nazad</a>
+		</div>
+	</div>
+	<a href="#myDialogTemplate" id="dialogButton" data-rel="popup" data-position-to="window" data-transition="fade"
+	   class="ui-btn ui-corner-all ui-shadow ui-btn-icon-left" style="display:none"></a>
+</body>
+</html>
+
+<script>
+	var _username = localStorage.getItem('user_permanent');
+	var _typsEnabled = JSON.parse(localStorage.getItem('types_permanent'));
+	var _markersAccident = [];
+	var _markersCrash = [];
+	var _markersJam = [];
+	var _markersHelp = [];
+	var _myLatitude;
+	var _myLongitude;
+
+	$('.ui-btn').css('background-color', 'gray');
+	$(document).ready(function () {
+		var wHeight = $(document).height();
+		var mapHeight = wHeight / 3.0;
+		$("#googleMap").css('height', mapHeight);
+		setTimeout(function () {
+			if (localStorage.getItem('user_firsttime') == 'true') {
+				openDialog('DOBRO DOŠLI', 'Ovde je potrebno napisati neku prijatniju poruku.');
+				localStorage.setItem('user_firsttime', 'false');
+			}
+		}, 500);
+
+		if (_typsEnabled == null) {
+			_typsEnabled = { "types": ["1", "1", "1", "1"] };
+			localStorage.setItem('types_permanent', '{ "types": ["1", "1", "1", "1"] }');
+		}
+		else
+		{
+			$('#switch_zastoj').val(_typsEnabled.types[0]);
+			$('#switch_nezgode').val(_typsEnabled.types[1]);
+			$('#switch_udes').val(_typsEnabled.types[2]);
+			$('#switch_pomoc').val(_typsEnabled.types[3]);
+		}
+		navigator.geolocation.getCurrentPosition(getOnStart, onError);
+	});
+
+	function changeType(switchId, index) {
+		_typsEnabled.types[index] = $('#' + switchId).val();
+		clearMarkers(_markersAccident);
+		clearMarkers(_markersCrash);
+		clearMarkers(_markersJam);
+		clearMarkers(_markersHelp);
+		localStorage.setItem('types_permanent', JSON.stringify(_typsEnabled));
+		getObjects(_myLatitude, _myLongitude);
+		if (source != null) {
+			source.close();
+		}
+		connectToServer(_myLatitude, _myLongitude);
+	};
+
+
+	function removeEl(markers, objInd) {
+		for (var i = 0; i < markers.length; i++) {
+			if (markers[i].id == objInd) {
+				markers[i].setMap(null);
+				markers.splice(i, 1);
+			}
+		}
+	}
+	function deleteObject() {
+		var objInd = $('#item_id').val();
+		if (objInd == '') {
+			alert("Izaberite objekat.");
+			return;
+		}
+		$.ajax({
+			type: "POST",
+			url: "http://damjan.voidsoft.in.rs/php/deleteObject.php",
+			xhrFields: { withCredentials: false },
+			crossDomain: true,
+			beforeSend: function () { $.mobile.loading('show') },
+			complete: function () { $.mobile.loading('hide') },
+			data: { objectId: objInd },
+			dataType: 'text',
+			success: function (event) {
+				if (event.indexOf('true') != -1) {
+					removeEl(_markersAccident, objInd);
+					removeEl(_markersCrash, objInd);
+					removeEl(_markersJam, objInd);
+					removeEl(_markersHelp, objInd);
+
+					$('#item_id').val('');
+					$('#item_type').val('');
+					$('#item_desc').val('');
+				}
+				else
+					alert("Došlo je do greške");
+			},
+			error: function () {
+				alert("error");
+			}
+		});
+	}
+
+	function openDialog(headerText, mainText) {
+		$('#dialogHeaderText').text(headerText);
+		$('#dialogMainText').text(mainText)
+		$('#dialogButton').click()
+	}
+
+	function logout() {
+		localStorage.removeItem('user_permanent');
+		window.location = 'index.html';
+	};
+
+	function addNewClick() {
+		window.location = "addnew_mobile.html";
+	};	
+
+	function redrawObjects(map, markers, fromPosition) {
+		for (var i = fromPosition; i < markers.length; i++) {
+			markers[i].setMap(map);
+		}
+	}
+
+	function clearMarkers(markers) {
+		for (var i = 0; i < markers.length; i++) {
+			markers[i].setMap(null);
+		}
+	}
+
+	function getObjects(lat, lon) {
+		$.ajax({
+			type: "POST",
+			url: "http://damjan.voidsoft.in.rs/php/findAllObjects.php",
+			xhrFields: { withCredentials: false },
+			crossDomain: true,
+			beforeSend: function () { $.mobile.loading('show') },
+			complete: function () { $.mobile.loading('hide') },
+			data: { lat: lat, lon: lon, zastoji: _typsEnabled.types[0], nezgode: _typsEnabled.types[1], udesi: _typsEnabled.types[2], pomoci: _typsEnabled.types[3] },
+			dataType: 'json',
+			success: function (event) {
+				if (event.indexOf('error') == -1) {
+					var accInd = 0;
+					var crashInd = 0;
+					var jamInd = 0;
+					var helpInd = 0;
+					_markersAccident = [];
+					_markersCrash = [];
+					_markersJam = [];
+					_markersHelp = [];
+					for (var i = 0; i < event.length; i++) {
+						switch (event[i].type) {
+							case 'zastoj':
+								_markersJam[jamInd] = new google.maps.Marker({
+									icon: 'img/jam.png',
+									position: new google.maps.LatLng(event[i].latitude, event[i].longitude),
+									title: event[i].description,
+									id: event[i].id,
+									description: event[i].description
+								});
+
+								google.maps.event.addListener(_markersJam[jamInd++], 'click', function () {
+									$('#item_id').val(this.id);
+									$('#item_type').val('Zastoj');
+									$('#item_desc').val(this.description);
+								});
+								
+								break;
+							case 'nezgoda':
+								_markersAccident[accInd] = new google.maps.Marker({
+									icon: 'img/accident.png',
+									position: new google.maps.LatLng(event[i].latitude, event[i].longitude),
+									title: event[i].description,
+									id: event[i].id,
+									description: event[i].description
+								});
+
+								google.maps.event.addListener(_markersAccident[accInd++], 'click', function () {
+									$('#item_id').val(this.id);
+									$('#item_type').val('Nezgoda');
+									$('#item_desc').val(this.description);
+								});
+								
+								break;
+							case 'udes':
+								_markersCrash[crashInd] = new google.maps.Marker({
+									icon: 'img/crash.png',
+									position: new google.maps.LatLng(event[i].latitude, event[i].longitude),
+									title: event[i].description,
+									id: event[i].id,
+									description: event[i].description
+								});
+
+								google.maps.event.addListener(_markersCrash[crashInd++], 'click', function () {
+									$('#item_id').val(this.id);
+									$('#item_type').val('Udes');
+									$('#item_desc').val(this.description);
+								});
+								
+								break;
+							case 'pomoc':
+								_markersHelp[helpInd] = new google.maps.Marker({
+									icon: 'img/help.png',
+									position: new google.maps.LatLng(event[i].latitude, event[i].longitude),
+									title: event[i].description,
+									id: event[i].id,
+									description: event[i].description
+								});
+
+								google.maps.event.addListener(_markersHelp[helpInd++], 'click', function () {
+									$('#item_id').val(this.id);
+									$('#item_type').val('Pomoć');
+									$('#item_desc').val(this.description);
+								});
+								
+								break;
+						};
+					}
+					redrawObjects(_map, _markersAccident, 0);
+					redrawObjects(_map, _markersCrash, 0);
+					redrawObjects(_map, _markersJam, 0);
+					redrawObjects(_map, _markersHelp, 0);
+				}
+				else
+					alert("Pogrešan nalog.");
+			},
+			error: function () {
+				alert("error");
+			}
+		});
+	};
+
+	var _myCenter = new google.maps.LatLng(43.331251, 21.892552);
+	var _myLocation = {lat: 0, lon: 0};
+	var _map;
+	var _marker;
+
+	function distance(lat1, lon1, lat2, lon2) {
+		var R = 6371; // Earth's radius in Km
+		var pis = 3.14159265358979 / 180.0;
+		return Math.acos(Math.sin(lat1*pis) * Math.sin(lat2*pis) +
+						Math.cos(lat1*pis) * Math.cos(lat2*pis) *
+						Math.cos(lon2*pis - lon1*pis)) * R;
+	}
+
+	var _circle;
+	function initialize() {
+		var mapProp = {
+			center: _myCenter,
+			zoom: 15,
+			mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+
+		_map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+
+		_marker = new google.maps.Marker({
+			position: _myCenter
+		});
+		_marker.setMap(_map);
+	}
+	google.maps.event.addDomListener(window, 'load', initialize);
+
+	var source = null;
+	function connectToServer(lat, lon) {
+		if (source != null) {
+			source.close();
+			source = null;
+		}
+		var typeParam = 'zastoji=' + _typsEnabled.types[0] + '&nezgode=' + _typsEnabled.types[1] + '&udesi=' + _typsEnabled.types[2] + '&pomoci=' + _typsEnabled.types[3];
+		source = new EventSource("http://damjan.voidsoft.in.rs/php/sse.php?lon=" + lon + "&lat=" + lat + "&" + typeParam);
+		source.onerror = function (e) {
+			e = e || event, msg = '';
+
+			switch (e.target.readyState) {
+				// if reconnecting
+				case EventSource.CONNECTING:
+					msg = 'Reconnecting…';
+					break;
+				// if error was fatal
+				case EventSource.CLOSED:
+					msg = 'Connection failed. Will not retry.';
+					break;
+			}
+			console.log(msg);
+		};
+		source.onopen = function () { console.log("Connection is established."); };
+		source.onmessage = function (event) {
+			console.log(event.data);
+			event = JSON.parse(event.data);
+			var accInd = _markersAccident.length;
+			var crashInd = _markersCrash.length;
+			var jamInd = _markersJam.length;
+			var helpInd = _markersHelp.length;
+
+			var accIndTmp = _markersAccident.length;
+			var crashIndTmp = _markersCrash.length;
+			var jamIndTmp = _markersJam.length;
+			var helpIndTmp = _markersHelp.length;
+
+			var newOne = false;
+
+			for (var i = 0; i < event.length; i++) {
+				switch (event[i].type) {
+					case 'zastoj':
+						_markersJam[jamInd] = new google.maps.Marker({
+							icon: 'img/jam.png',
+							position: new google.maps.LatLng(event[i].latitude, event[i].longitude),
+							title: event[i].description,
+							id: event[i].id,
+							description: event[i].description
+						});
+
+						google.maps.event.addListener(_markersJam[jamInd++], 'click', function () {
+							$('#item_id').val(this.id);
+							$('#item_type').val('Zastoj');
+							$('#item_desc').val(this.description);
+						});
+						newOne = true;
+						break;
+					case 'nezgoda':
+						_markersAccident[accInd] = new google.maps.Marker({
+							icon: 'img/accident.png',
+							position: new google.maps.LatLng(event[i].latitude, event[i].longitude),
+							title: event[i].description,
+							id: event[i].id,
+							description: event[i].description
+						});
+
+						google.maps.event.addListener(_markersAccident[accInd++], 'click', function () {
+							$('#item_id').val(this.id);
+							$('#item_type').val('Nezgoda');
+							$('#item_desc').val(this.description);
+						});
+						newOne = true;
+						break;
+					case 'udes':
+						_markersCrash[crashInd] = new google.maps.Marker({
+							icon: 'img/crash.png',
+							position: new google.maps.LatLng(event[i].latitude, event[i].longitude),
+							title: event[i].description,
+							id: event[i].id,
+							description: event[i].description
+						});
+
+						google.maps.event.addListener(_markersCrash[crashInd++], 'click', function () {
+							$('#item_id').val(this.id);
+							$('#item_type').val('Udes');
+							$('#item_desc').val(this.description);
+						});
+						newOne = true;
+						break;
+					case 'pomoc':
+						_markersHelp[helpInd] = new google.maps.Marker({
+							icon: 'img/help.png',
+							position: new google.maps.LatLng(event[i].latitude, event[i].longitude),
+							title: event[i].description,
+							id: event[i].id,
+							description: event[i].description
+						});
+
+						google.maps.event.addListener(_markersHelp[helpInd++], 'click', function () {
+							$('#item_id').val(this.id);
+							$('#item_type').val('Pomoć');
+							$('#item_desc').val(this.description);
+						});
+						newOne = true;
+						break;
+				};
+			}
+			redrawObjects(_map, _markersAccident, accIndTmp);
+			redrawObjects(_map, _markersCrash, crashIndTmp);
+			redrawObjects(_map, _markersJam, jamIndTmp);
+			redrawObjects(_map, _markersHelp, helpIndTmp);
+			if (newOne) {
+			    console.log("New object found!");
+			    window.navigator.vibrate(200)			    
+			    var sound = new Audio("audio/sound.mp3");
+			    sound.play();
+			}
+		};
+	}
+
+	function getOnStart(position) {
+		getObjects(position.coords.latitude, position.coords.longitude);
+		setInterval(function () {
+			navigator.geolocation.getCurrentPosition(setMarkerAndCenter, onError);
+		}, 5000);
+		connectToServer(position.coords.latitude, position.coords.longitude);
+	}
+
+	function setMarkerAndCenter(position) {
+		_map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+		_marker.setPosition(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+		_myLatitude = position.coords.latitude;
+		_myLongitude = position.coords.longitude;
+		var circleOptions = {
+			strokeColor: '#FFFFFF',
+			strokeOpacity: 0.8,
+			strokeWeight: 2,
+			fillColor: '#FF0000',
+			fillOpacity: 0.35,
+			map: _map,
+			center: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+			radius: 5000
+		};
+		if(_circle != null)
+			_circle.setMap(null);
+		// Add the circle for this city to the map.
+		_circle = new google.maps.Circle(circleOptions);
+	}
+
+	function onError(error) {
+		alert('code: ' + error.code + '\n' +
+			  'message: ' + error.message + '\n');
+	}
+
+</script>
